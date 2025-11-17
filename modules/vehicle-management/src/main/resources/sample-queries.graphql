@@ -1,0 +1,441 @@
+# Sample GraphQL Queries for BPR Vehicle Management System
+# Copy and paste these queries into the GraphQL Playground to test the sample data
+
+# ==============================================
+# DASHBOARD QUERIES
+# ==============================================
+
+# Get system overview and statistics
+query Dashboard {
+  dashboard {
+    totalVehicles
+    availableVehicles
+    inUseVehicles
+    totalDrivers
+    availableDrivers
+    onDutyDrivers
+    totalBookings
+    pendingBookings
+    upcomingBookings
+    currentBookings
+    recentActivity {
+      id
+      bookingReference
+      purpose
+      status
+      startTime
+    }
+  }
+}
+
+# ==============================================
+# VEHICLE QUERIES
+# ==============================================
+
+# Get all vehicles
+query AllVehicles {
+  vehicles {
+    id
+    plateNumber
+    make
+    model
+    year
+    type
+    status
+    capacity
+    color
+    location
+    mileage
+    fuelType
+    available
+    displayName
+  }
+}
+
+# Get available vehicles only
+query AvailableVehicles {
+  vehicles(availableOnly: true) {
+    id
+    plateNumber
+    make
+    model
+    type
+    capacity
+    location
+    mileage
+  }
+}
+
+# Get vehicles by type
+query VehiclesByType {
+  vehicles(type: SUV) {
+    plateNumber
+    make
+    model
+    capacity
+    available
+  }
+}
+
+# Get specific vehicle
+query VehicleDetails($vehicleId: ID!) {
+  vehicle(id: $vehicleId) {
+    id
+    plateNumber
+    make
+    model
+    year
+    type
+    status
+    capacity
+    color
+    location
+    description
+    mileage
+    fuelType
+    vehicleGroup
+    costCenter
+    lastMaintenance
+    nextMaintenance
+    currentBooking {
+      reference
+      status
+      startTime
+      endTime
+    }
+  }
+}
+
+# ==============================================
+# DRIVER QUERIES  
+# ==============================================
+
+# Get all drivers
+query AllDrivers {
+  drivers {
+    id
+    userId
+    status
+    licenseType
+    licenseNumber
+    licenseExpiryDate
+    phoneNumber
+    department
+    yearsOfExperience
+    availableForBooking
+    totalTripsCompleted
+    totalMilesDriven
+    displayName
+  }
+}
+
+# Get available drivers
+query AvailableDrivers {
+  drivers(availableOnly: true) {
+    id
+    licenseNumber
+    licenseType
+    department
+    yearsOfExperience
+    phoneNumber
+  }
+}
+
+# Get specific driver
+query DriverDetails($driverId: ID!) {
+  driver(id: $driverId) {
+    id
+    userId
+    status
+    licenseType
+    licenseNumber
+    licenseExpiryDate
+    phoneNumber
+    emergencyContact
+    emergencyPhone
+    address
+    hireDate
+    yearsOfExperience
+    certifications
+    department
+    costCenter
+    shift
+    lastHealthCheck
+    notes
+    totalTripsCompleted
+    totalMilesDriven
+    displayName
+  }
+}
+
+# ==============================================
+# BOOKING QUERIES
+# ==============================================
+
+# Get all bookings
+query AllBookings {
+  bookings {
+    id
+    bookingReference
+    status
+    type
+    purpose
+    startTime
+    endTime
+    vehicle {
+      plateNumber
+      make
+      model
+    }
+    driver {
+      licenseNumber
+      displayName
+    }
+    requester {
+      fullName
+    }
+  }
+}
+
+# Get bookings by status
+query BookingsByStatus($status: BookingStatus!) {
+  bookings(status: $status) {
+    id
+    bookingReference
+    purpose
+    startTime
+    endTime
+    status
+  }
+}
+
+# Get current bookings
+query CurrentBookings {
+  currentBookings {
+    id
+    bookingReference
+    status
+    startTime
+    endTime
+    purpose
+    vehicle {
+      plateNumber
+      make
+      model
+    }
+    driver {
+      displayName
+    }
+  }
+}
+
+# Get upcoming bookings
+query UpcomingBookings {
+  upcomingBookings {
+    id
+    bookingReference
+    status
+    startTime
+    endTime
+    purpose
+  }
+}
+
+# Get specific booking
+query BookingDetails($bookingId: ID!) {
+  booking(id: $bookingId) {
+    id
+    bookingReference
+    status
+    type
+    purpose
+    description
+    startTime
+    endTime
+    actualStartTime
+    actualEndTime
+    pickupLocation
+    destination
+    returnLocation
+    estimatedPassengers
+    managerName
+    costCenter
+    approvalComment
+    approvedAt
+    feedback
+    actualMileage
+    additionalRequirements
+    durationInHours
+    canBeCancelled
+    needsApproval
+    vehicle {
+      id
+      plateNumber
+      make
+      model
+      type
+    }
+    driver {
+      id
+      displayName
+      licenseType
+    }
+    requester {
+      id
+      fullName
+      email
+    }
+    approver {
+      id
+      fullName
+    }
+  }
+}
+
+# ==============================================
+# MUTATION EXAMPLES
+# ==============================================
+
+# Create a new booking
+mutation CreateBooking($request: CreateBookingRequest!, $requesterId: ID!) {
+  createBooking(request: $request, requesterId: $requesterId) {
+    id
+    bookingReference
+    status
+    purpose
+    startTime
+    endTime
+    vehicle {
+      plateNumber
+      make
+    }
+  }
+}
+
+# Variables for createBooking mutation:
+# {
+#   "request": {
+#     "vehicleId": "1",
+#     "driverId": "1", 
+#     "purpose": "Client meeting",
+#     "description": "Meeting with potential client",
+#     "startTime": "2025-11-10T09:00:00",
+#     "endTime": "2025-11-10T17:00:00",
+#     "pickupLocation": "Main Office",
+#     "destination": "Client Office",
+#     "returnLocation": "Main Office",
+#     "estimatedPassengers": 2,
+#     "bookingType": "BUSINESS_TRIP"
+#   },
+#   "requesterId": "1"
+# }
+
+# Update a booking
+mutation UpdateBooking($id: ID!, $request: UpdateBookingRequest!) {
+  updateBooking(id: $id, request: $request) {
+    id
+    bookingReference
+    purpose
+    startTime
+    endTime
+  }
+}
+
+# Approve a booking
+mutation ApproveBooking($id: ID!, $approverId: ID!, $comment: String!) {
+  approveBooking(id: $id, approverId: $approverId, comment: $comment) {
+    id
+    bookingReference
+    status
+    approvalComment
+    approvedAt
+  }
+}
+
+# Cancel a booking
+mutation CancelBooking($id: ID!, $reason: String!) {
+  cancelBooking(id: $id, reason: $reason)
+}
+
+# Create a vehicle
+mutation CreateVehicle($request: VehicleRequest!) {
+  createVehicle(request: $request) {
+    id
+    plateNumber
+    make
+    model
+    type
+    status
+  }
+}
+
+# Create a driver
+mutation CreateDriver($request: DriverRequest!) {
+  createDriver(request: $request) {
+    id
+    licenseNumber
+    licenseType
+    status
+  }
+}
+
+# ==============================================
+# SUBSCRIPTION EXAMPLES
+# ==============================================
+
+# Subscribe to booking creation events
+subscription BookingCreated {
+  bookingCreated {
+    id
+    bookingReference
+    status
+    purpose
+    startTime
+    vehicle {
+      plateNumber
+    }
+  }
+}
+
+# Subscribe to booking status changes
+subscription BookingStatusChanged {
+  bookingStatusChanged {
+    id
+    bookingReference
+    status
+    displayStatus
+  }
+}
+
+# Subscribe to vehicle status changes
+subscription VehicleStatusChanged {
+  vehicleStatusChanged {
+    id
+    plateNumber
+    status
+    available
+  }
+}
+
+# ==============================================
+# TEST DATA VERIFICATION
+# ==============================================
+
+# Quick data integrity check
+query DataIntegrityCheck {
+  vehicles { id }
+  drivers { id }
+  bookings { id }
+  dashboard {
+    totalVehicles
+    totalDrivers  
+    totalBookings
+  }
+}
+
+# Sample data distribution
+query DataDistribution {
+  vehicles { type }
+  drivers { licenseType }
+  bookings { status type }
+}

@@ -1,0 +1,121 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/vehicle
+
+spring:
+  application:
+    name: vehicle-management-service
+  
+  datasource:
+    url: jdbc:h2:mem:vehicle_db
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+      encoding: utf-8
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+        use_sql_comments: true
+  
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
+    schema:
+      introspection:
+        enabled: true
+  
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${jwt.issuer:http://localhost:8080/auth}
+
+# GraphQL Configuration
+graphql:
+  servlet:
+    enabled: true
+    path: /graphql
+    max-query-depth: 10
+    max-query-complexity: 1000
+  
+  playground:
+    enabled: true
+    path: /playground
+
+# Logging Configuration
+logging:
+  level:
+    com.bpr.vehicle: DEBUG
+    org.springframework.graphql: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/vehicle-management.log
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,graphQL,graphiql
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# BPR Platform Configuration
+bpr:
+  platform:
+    name: "BPR Vehicle Management"
+    version: "1.0.0"
+    description: "Vehicle and driver reservation system"
+    module:
+      name: "vehicle-management"
+      version: "1.0.0"
+
+# Disable Sample Data Loader to use SQL script approach
+sample-data:
+  enabled: false
+  
+  security:
+    jwt:
+      secret: ${JWT_SECRET:bpr-vehicle-secret-key-2023}
+      expiration: 86400  # 24 hours
+      refresh-expiration: 604800  # 7 days
+  
+  notifications:
+    email:
+      enabled: true
+      from: noreply@bpr-platform.com
+      smtp:
+        host: ${SMTP_HOST:localhost}
+        port: ${SMTP_PORT:587}
+        username: ${SMTP_USERNAME:}
+        password: ${SMTP_PASSWORD:}
+        properties:
+          mail.smtp.auth: true
+          mail.smtp.starttls.enable: true

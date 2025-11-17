@@ -1,0 +1,335 @@
+# GraphQL Schema for Vehicle Management Module
+# This schema defines the API for the vehicle reservation system
+
+scalar DateTime
+
+# Enums
+enum VehicleStatus {
+    AVAILABLE
+    BOOKED
+    IN_USE
+    MAINTENANCE
+    OUT_OF_SERVICE
+}
+
+enum VehicleType {
+    SEDAN
+    SUV
+    VAN
+    TRUCK
+    MOTORCYCLE
+    OTHER
+}
+
+enum DriverStatus {
+    AVAILABLE
+    ASSIGNED
+    ON_DUTY
+    UNAVAILABLE
+    ON_LEAVE
+    SICK
+}
+
+enum LicenseType {
+    CLASS_1
+    CLASS_2
+    CLASS_3
+    MOTORCYCLE
+    COMMERCIAL
+}
+
+enum BookingStatus {
+    PENDING
+    APPROVED
+    REJECTED
+    CONFIRMED
+    ACTIVE
+    COMPLETED
+    CANCELLED
+    NO_SHOW
+}
+
+enum BookingType {
+    BUSINESS_TRIP
+    MEETING
+    DELIVERY
+    MAINTENANCE_TRIP
+    TRAINING
+    OTHER
+}
+
+# Types
+type Vehicle {
+    id: ID!
+    plateNumber: String!
+    make: String!
+    model: String!
+    year: Int!
+    type: VehicleType!
+    status: VehicleStatus!
+    capacity: Int!
+    color: String
+    description: String
+    location: String
+    lastMaintenance: DateTime
+    nextMaintenance: DateTime
+    mileage: Float!
+    fuelType: String
+    vehicleGroup: String
+    costCenter: String
+    available: Boolean!
+    displayName: String!
+    currentBooking: BookingSummary
+    upcomingBookings: [BookingSummary!]!
+}
+
+type Driver {
+    id: ID!
+    userId: ID
+    status: DriverStatus!
+    licenseType: LicenseType!
+    licenseNumber: String!
+    licenseExpiryDate: DateTime
+    phoneNumber: String
+    emergencyContact: String
+    emergencyPhone: String
+    address: String
+    hireDate: DateTime
+    yearsOfExperience: Int!
+    certifications: String
+    availableForBooking: Boolean!
+    department: String
+    costCenter: String
+    shift: String
+    lastHealthCheck: DateTime
+    notes: String
+    totalTripsCompleted: Int!
+    totalMilesDriven: Float!
+    displayName: String!
+}
+
+type User {
+    id: ID!
+    username: String!
+    fullName: String!
+    email: String!
+    department: String
+    role: String!
+    active: Boolean!
+    lastLoginAt: DateTime
+}
+
+type Booking {
+    id: ID!
+    bookingReference: String!
+    status: BookingStatus!
+    type: BookingType
+    vehicle: Vehicle!
+    driver: Driver
+    requester: User!
+    approver: User
+    startTime: DateTime!
+    endTime: DateTime!
+    actualStartTime: DateTime
+    actualEndTime: DateTime
+    purpose: String!
+    description: String
+    pickupLocation: String
+    destination: String
+    returnLocation: String
+    estimatedPassengers: Int!
+    managerName: String
+    costCenter: String
+    approvalComment: String
+    approvedAt: DateTime
+    rejectedAt: DateTime
+    rejectionReason: String
+    displayStatus: String!
+    feedback: String
+    actualMileage: Float!
+    additionalRequirements: String
+    durationInHours: Int!
+    canBeCancelled: Boolean!
+    isCurrent: Boolean!
+    isUpcoming: Boolean!
+    needsApproval: Boolean!
+    eventHistory: [BookingEvent!]!
+}
+
+type BookingEvent {
+    id: ID!
+    eventId: String!
+    eventType: String!
+    eventData: String
+    timestamp: DateTime!
+    causedBy: String
+    version: Int!
+}
+
+type BookingSummary {
+    reference: String!
+    purpose: String!
+    status: String!
+    startTime: DateTime!
+    endTime: DateTime!
+    requesterName: String
+}
+
+# Input Types
+input CreateBookingRequest {
+    vehicleId: ID!
+    driverId: ID
+    purpose: String!
+    description: String
+    startTime: DateTime!
+    endTime: DateTime!
+    pickupLocation: String!
+    destination: String!
+    returnLocation: String
+    estimatedPassengers: Int = 1
+    managerName: String
+    costCenter: String
+    bookingType: BookingType = BUSINESS_TRIP
+    additionalRequirements: String
+}
+
+input VehicleRequest {
+    plateNumber: String!
+    make: String!
+    model: String!
+    year: Int!
+    type: VehicleType!
+    capacity: Int!
+    color: String
+    description: String
+    location: String
+    fuelType: String
+    vehicleGroup: String
+    costCenter: String
+}
+
+input DriverRequest {
+    userId: ID
+    licenseType: LicenseType!
+    licenseNumber: String!
+    licenseExpiryDate: DateTime
+    phoneNumber: String
+    emergencyContact: String
+    emergencyPhone: String
+    address: String
+    hireDate: DateTime
+    yearsOfExperience: Int!
+    certifications: String
+    department: String
+    costCenter: String
+    shift: String
+    lastHealthCheck: DateTime
+    notes: String
+}
+
+input UpdateBookingRequest {
+    purpose: String
+    description: String
+    startTime: DateTime
+    endTime: DateTime
+    pickupLocation: String
+    destination: String
+    returnLocation: String
+    estimatedPassengers: Int
+    additionalRequirements: String
+}
+
+# Queries
+type Query {
+    # Vehicle Queries
+    vehicles(status: VehicleStatus, type: VehicleType, availableOnly: Boolean): [Vehicle!]!
+    vehicle(id: ID!): Vehicle
+    vehiclesByLocation(location: String!): [Vehicle!]!
+    availableVehicles(startTime: DateTime!, endTime: DateTime!): [Vehicle!]!
+    vehiclesRequiringMaintenance(date: DateTime!): [Vehicle!]!
+    
+    # Driver Queries
+    drivers(status: DriverStatus, availableOnly: Boolean): [Driver!]!
+    driver(id: ID!): Driver
+    availableDrivers(startTime: DateTime!, endTime: DateTime!): [Driver!]!
+    driversRequiringLicenseRenewal(date: DateTime!): [Driver!]!
+    
+    # Booking Queries
+    bookings(status: BookingStatus, requesterId: ID, vehicleId: ID, driverId: ID): [Booking!]!
+    booking(id: ID!): Booking
+    bookingByReference(reference: String!): Booking
+    myBookings(requesterId: ID!, includeHistory: Boolean = false): [Booking!]!
+    pendingApprovals(managerName: String!): [Booking!]!
+    currentBookings: [Booking!]!
+    upcomingBookings: [Booking!]!
+    
+    # Dashboard Queries
+    dashboard: Dashboard!
+}
+
+# Mutations
+type Mutation {
+    # Booking Mutations
+    createBooking(request: CreateBookingRequest!, requesterId: ID!): Booking!
+    updateBooking(id: ID!, request: UpdateBookingRequest!): Booking!
+    cancelBooking(id: ID!, reason: String!): Boolean!
+    approveBooking(id: ID!, approverId: ID!, comment: String!): Booking!
+    rejectBooking(id: ID!, approverId: ID!, reason: String!): Booking!
+    activateBooking(id: ID!): Booking!
+    completeBooking(id: ID!, feedback: String!, actualMileage: Float!): Booking!
+    
+    # Vehicle Mutations
+    createVehicle(request: VehicleRequest!): Vehicle!
+    updateVehicle(id: ID!, request: VehicleRequest!): Vehicle!
+    deleteVehicle(id: ID!): Boolean!
+    setVehicleStatus(id: ID!, status: VehicleStatus!): Vehicle!
+    
+    # Driver Mutations
+    createDriver(request: DriverRequest!): Driver!
+    updateDriver(id: ID!, request: DriverRequest!): Driver!
+    deleteDriver(id: ID!): Boolean!
+    setDriverStatus(id: ID!, status: DriverStatus!): Driver!
+}
+
+# Subscriptions for real-time updates
+type Subscription {
+    # Real-time booking updates
+    bookingCreated: Booking!
+    bookingStatusChanged: Booking!
+    bookingUpdated: Booking!
+    bookingCancelled: Booking!
+    
+    # Real-time availability updates
+    vehicleStatusChanged: Vehicle!
+    driverStatusChanged: Driver!
+    
+    # Real-time notifications
+    notification(userId: ID!): Notification!
+}
+
+# Additional type for dashboard
+type Dashboard {
+    totalVehicles: Int!
+    availableVehicles: Int!
+    inUseVehicles: Int!
+    totalDrivers: Int!
+    availableDrivers: Int!
+    onDutyDrivers: Int!
+    totalBookings: Int!
+    pendingBookings: Int!
+    upcomingBookings: Int!
+    currentBookings: Int!
+    recentActivity: [Booking!]!
+}
+
+# Notification type
+type Notification {
+    id: ID!
+    type: String!
+    title: String!
+    message: String!
+    timestamp: DateTime!
+    userId: ID!
+    read: Boolean!
+    actionUrl: String
+}

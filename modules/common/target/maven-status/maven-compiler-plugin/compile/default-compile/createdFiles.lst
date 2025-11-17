@@ -1,0 +1,4 @@
+com\platform\common\domain\core\User.class
+com\platform\common\domain\core\BaseEntity.class
+com\platform\common\domain\core\User$UserRole.class
+com\platform\common\domain\core\DomainEvent.class
