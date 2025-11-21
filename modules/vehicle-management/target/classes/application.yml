@@ -88,6 +88,8 @@ management:
         enabled: true
 
 # BPR Platform Configuration
+
+
 bpr:
   platform:
     name: "BPR Vehicle Management"
